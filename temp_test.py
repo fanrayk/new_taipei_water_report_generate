@@ -1,18 +1,4 @@
 import os
-from excel_processor import (
-    select_folder_and_excel,
-    process_excel_pandas,
-    create_output_folder,
-)
-from doc_generator import generate_records_doc
-from utils import cleanup_temp_files, overlay_images_to_pdf
-from doc_image_processor import (
-    merge_pdfs_from_list,
-    process_documents as process_image_documents,
-)
-from config import TEMPLATE_TABLE
-
-import os
 import re
 import tkinter as tk
 from tkinter import filedialog
@@ -25,32 +11,28 @@ from PyPDF2 import PdfMerger
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
-
-def set_cell_top_border_bold(
-    cell, border_color="000000", border_size="6", border_space="0", border_val="single"
-):
+def set_cell_top_border_bold(cell, border_color="000000", border_size="6", border_space="0", border_val="single"):
     """
     將指定儲存格的上邊框設為 3/4pt（即 border_size 為 "6"）
     """
     tc = cell._tc
     tcPr = tc.get_or_add_tcPr()
     # 找出現有的邊框設定
-    tcBorders = tcPr.find(qn("w:tcBorders"))
+    tcBorders = tcPr.find(qn('w:tcBorders'))
     if tcBorders is None:
-        tcBorders = OxmlElement("w:tcBorders")
+        tcBorders = OxmlElement('w:tcBorders')
         tcPr.append(tcBorders)
     else:
         # 移除現有的上邊框設定（如果有的話）
-        for top in tcBorders.findall(qn("w:top")):
+        for top in tcBorders.findall(qn('w:top')):
             tcBorders.remove(top)
     # 新增上邊框元素
-    top = OxmlElement("w:top")
-    top.set(qn("w:val"), border_val)
-    top.set(qn("w:sz"), border_size)
-    top.set(qn("w:space"), border_space)
-    top.set(qn("w:color"), border_color)
+    top = OxmlElement('w:top')
+    top.set(qn('w:val'), border_val)
+    top.set(qn('w:sz'), border_size)
+    top.set(qn('w:space'), border_space)
+    top.set(qn('w:color'), border_color)
     tcBorders.append(top)
-
 
 def set_cell_font(cell, font_name="標楷體"):
     """
@@ -61,8 +43,7 @@ def set_cell_font(cell, font_name="標楷體"):
             run.font.name = font_name
             # 設定東亞文字字型
             rFonts = run._element.rPr.rFonts
-            rFonts.set(qn("w:eastAsia"), font_name)
-
+            rFonts.set(qn('w:eastAsia'), font_name)
 
 def get_image_files(folder):
     """
@@ -75,7 +56,6 @@ def get_image_files(folder):
         if os.path.splitext(f)[1].lower() in valid_extensions
     ]
 
-
 def generate_dummy_image(filename):
     """
     產生一張全白的圖片並儲存，回傳該圖片的檔案路徑。
@@ -85,7 +65,6 @@ def generate_dummy_image(filename):
     dummy_path = os.path.join(os.getcwd(), filename)
     img.save(dummy_path)
     return dummy_path
-
 
 def insert_images_into_9x3_template_left_to_right(template_path, images, output_prefix):
     """
@@ -117,34 +96,34 @@ def insert_images_into_9x3_template_left_to_right(template_path, images, output_
     回傳生成的檔案路徑列表。
     """
     output_files = []
-    groups = [images[i : i + 8] for i in range(0, len(images), 8)]
-
+    groups = [images[i:i+8] for i in range(0, len(images), 8)]
+    
     out_dir = os.path.dirname(output_prefix)
     base_name = os.path.basename(output_prefix)
     if out_dir and not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
+    
     # 用來記錄已插入類別名稱的種類（避免重複插入）
     used_categories = set()
-
+    
     # 更新後的垂直文字字典
     vertical_text_dict = {
         "埋深照": "二\n、\n深\n度\n相\n片",
         "銑鋪照": "三\n、\n臨\n時\n修\n復\n後\n全\n景\n照\n片",
         "測量照": "四\n、\n施\n測\n相\n片",
-        "讀數照": "五\n、\n讀\n數\n相\n片",
+        "讀數照": "五\n、\n讀\n數\n相\n片"
     }
-
+    
     for group_idx, group in enumerate(groups, start=1):
         doc = docx.Document(template_path)
         table = doc.tables[0]  # 假設模板中的第一個表格為 9×3
-
+        
         for j, (img_path, category) in enumerate(group):
-            row_pair = j // 2  # 0～3
-            effective_col = j % 2  # 0 或 1
+            row_pair = j // 2            # 0～3
+            effective_col = j % 2        # 0 或 1
             abs_col = 1 + effective_col  # 有效欄位（1 或 2）
-            abs_row_fname = 1 + 2 * row_pair  # 檔名行：1, 3, 5, 7
-            abs_row_img = 1 + 2 * row_pair + 1  # 圖片行：2, 4, 6, 8
+            abs_row_fname = 1 + 2 * row_pair      # 檔名行：1, 3, 5, 7
+            abs_row_img   = 1 + 2 * row_pair + 1  # 圖片行：2, 4, 6, 8
 
             # 檔名儲存格：先移除副檔名，再加上"編號:"前綴；若檔名以 blank 開頭則留空
             fname_cell = table.cell(abs_row_fname, abs_col)
@@ -166,14 +145,12 @@ def insert_images_into_9x3_template_left_to_right(template_path, images, output_
             for para in fname_cell.paragraphs:
                 para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             set_cell_font(fname_cell, "標楷體")
-
+            
             # 當該圖片為該類別的第一張時，
             # 合併左側儲存格（第 0 欄）與下方儲存格，
             # 並插入預先設定好的垂直文字，文字水平置中，並將上邊框加粗
             if category not in used_categories:
-                merged_cell = table.cell(abs_row_fname, 0).merge(
-                    table.cell(abs_row_img, 0)
-                )
+                merged_cell = table.cell(abs_row_fname, 0).merge(table.cell(abs_row_img, 0))
                 vertical_text = vertical_text_dict.get(category, category)
                 merged_cell.text = vertical_text
                 for para in merged_cell.paragraphs:
@@ -181,7 +158,7 @@ def insert_images_into_9x3_template_left_to_right(template_path, images, output_
                 set_cell_top_border_bold(merged_cell)
                 set_cell_font(merged_cell, "標楷體")
                 used_categories.add(category)
-
+            
             # 插入圖片至圖片儲存格
             img_cell = table.cell(abs_row_img, abs_col)
             img_cell.text = ""
@@ -190,7 +167,7 @@ def insert_images_into_9x3_template_left_to_right(template_path, images, output_
             set_cell_font(img_cell, "標楷體")
             run = paragraph.add_run()
             run.add_picture(img_path, height=Cm(5.47))
-
+        
         # 檢查第二行第一列的儲存格（table.cell(1,0)）是否有資料，
         # 如果沒有，則取該組中第二個圖片的類別並填入對應的垂直文字
         if table.cell(1, 0).text.strip() == "" and len(group) > 1:
@@ -202,55 +179,21 @@ def insert_images_into_9x3_template_left_to_right(template_path, images, output_
                 para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             set_cell_top_border_bold(cell_to_fill)
             set_cell_font(cell_to_fill, "標楷體")
-
+        
         output_file = os.path.join(out_dir, f"temp_{base_name}_{group_idx}.docx")
         doc.save(output_file)
         print(f"已儲存：{output_file}")
         output_files.append(output_file)
-
+    
     return output_files
 
-
 def main():
-    # 1. 選取資料夾與 Excel 檔案
-    excel_file_path = select_folder_and_excel()
-
-    # 2. 讀取 Excel 資料 (pandas)
-    df_renamed = process_excel_pandas(excel_file_path)
-    if df_renamed.empty:
-        print("Excel 資料讀取失敗，程式結束。")
-        exit()
-    context_number = df_renamed["case_number"].iloc[0]
-
-    # 3. 建立輸出資料夾
-    output_folder = create_output_folder(context_number)
-
-    # 4. 產生首頁文件
-    records_list = df_renamed.to_dict(orient="records")
-    record = records_list[0] if records_list else {}
-    records_pdf = generate_records_doc(record, output_folder)
-
-    overlay_images_to_pdf(
-        os.path.join(output_folder, "temp_自主查核表首頁.pdf"),
-        os.path.join(output_folder, f"{context_number}_自主查核表首頁.pdf"),
-        # os.path.join(output_folder, f"temp_{context_number}_自主查核表首頁.pdf"),
-    )
-
-    # 5. 處理圖片文件與合併 PDF
-    # 假設 Excel 檔案與「平面圖」資料夾皆位於同一主資料夾，
-    # 由 Excel 檔案所在路徑推得 main_folder。
-    main_folder = os.path.dirname(excel_file_path)
-    # 設定圖片文件用的 Word 模板（請確保模板中已預先設計好 3x9 的表格）
-    template_path = TEMPLATE_TABLE
-    process_image_documents(main_folder, template_path, output_folder, context_number)
-
-    # root = tk.Tk()
-    # root.withdraw()
-    # base_folder = filedialog.askdirectory(title="請選擇包含圖片的資料夾")
-    # if not base_folder:
-    #     print("未選擇資料夾，程式結束。")
-    #     return
-    base_folder = os.path.dirname(excel_file_path)
+    root = tk.Tk()
+    root.withdraw()
+    base_folder = filedialog.askdirectory(title="請選擇包含圖片的資料夾")
+    if not base_folder:
+        print("未選擇資料夾，程式結束。")
+        return
 
     images = []
     # 資料夾路徑與類別名稱
@@ -263,43 +206,29 @@ def main():
     if os.path.exists(folder1):
         images1 = get_image_files(folder1)
         if not images1:
-            images1 = [
-                generate_dummy_image("blank_0.jpg"),
-                generate_dummy_image("blank_0_2.jpg"),
-            ]
+            images1 = [generate_dummy_image("blank_0.jpg"), generate_dummy_image("blank_0_2.jpg")]
         elif len(images1) % 2 == 1:
             images1.append(generate_dummy_image("blank_0.jpg"))
     else:
-        images1 = [
-            generate_dummy_image("blank_0.jpg"),
-            generate_dummy_image("blank_0_2.jpg"),
-        ]
+        images1 = [generate_dummy_image("blank_0.jpg"), generate_dummy_image("blank_0_2.jpg")]
     images.extend([(img, "埋深照") for img in images1])
 
     # 處理銑鋪照
     if os.path.exists(folder2):
         images2 = get_image_files(folder2)
         if not images2:
-            images2 = [
-                generate_dummy_image("blank_1.jpg"),
-                generate_dummy_image("blank_1_2.jpg"),
-            ]
+            images2 = [generate_dummy_image("blank_1.jpg"), generate_dummy_image("blank_1_2.jpg")]
         elif len(images2) % 2 == 1:
             images2.append(generate_dummy_image("blank_1.jpg"))
     else:
-        images2 = [
-            generate_dummy_image("blank_1.jpg"),
-            generate_dummy_image("blank_1_2.jpg"),
-        ]
+        images2 = [generate_dummy_image("blank_1.jpg"), generate_dummy_image("blank_1_2.jpg")]
     images.extend([(img, "銑鋪照") for img in images2])
 
     # 處理測量照：依照檔名中的數字自然排序
     images3 = []
     if os.path.exists(folder3):
         files3 = get_image_files(folder3)
-        sorted_files3 = sorted(
-            files3, key=lambda x: int(re.search(r"\d+", os.path.basename(x)).group())
-        )
+        sorted_files3 = sorted(files3, key=lambda x: int(re.search(r'\d+', os.path.basename(x)).group()))
         images3 = sorted_files3
     images.extend([(img, "測量照") for img in images3])
 
@@ -307,9 +236,7 @@ def main():
     images4 = []
     if os.path.exists(folder4):
         files4 = get_image_files(folder4)
-        sorted_files4 = sorted(
-            files4, key=lambda x: int(re.search(r"\d+", os.path.basename(x)).group())
-        )
+        sorted_files4 = sorted(files4, key=lambda x: int(re.search(r'\d+', os.path.basename(x)).group()))
         images4 = sorted_files4
     images.extend([(img, "讀數照") for img in images4])
 
@@ -318,10 +245,8 @@ def main():
         return
 
     template_path = r"template\自主查核表_表格模板.docx"
-    output_prefix = os.path.join(output_folder, str(context_number))
-    word_files = insert_images_into_9x3_template_left_to_right(
-        template_path, images, output_prefix
-    )
+    output_prefix = r"output\images_filled"
+    word_files = insert_images_into_9x3_template_left_to_right(template_path, images, output_prefix)
 
     # 轉換所有 Word 檔案為 PDF
     pdf_files = []
@@ -335,25 +260,10 @@ def main():
     merger = PdfMerger()
     for pdf in pdf_files:
         merger.append(pdf)
-    merged_pdf_path = os.path.join(output_folder, f"temp_{context_number}_其他照片.pdf")
+    merged_pdf_path = os.path.join(os.getcwd(), "merged_output.pdf")
     merger.write(merged_pdf_path)
     merger.close()
     print(f"已合併 PDF：{merged_pdf_path}")
-
-    merge_pdfs_from_list(
-        [
-            os.path.join(output_folder, f"temp_{context_number}_自主查核表首頁.pdf"),
-            os.path.join(output_folder, f"temp_{context_number}_平面圖.pdf"),
-            os.path.join(output_folder, f"temp_{context_number}_其他照片.pdf"),
-        ],
-        os.path.join(output_folder, f"{context_number}_自主查核表.pdf"),
-    )
-    # final. 刪除暫存檔案
-    cleanup_temp_files(output_folder, "temp*")
-    cleanup_temp_files(os.getcwd(), "blank*")
-
-    print("========== 全部流程完成 ==========")
-
 
 if __name__ == "__main__":
     main()

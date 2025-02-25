@@ -80,12 +80,12 @@ def overlay_images_to_pdf(original_pdf_path,output_pdf_path):
     c = canvas.Canvas(packet, pagesize=A4)
 
     # 第一張圖片的設定（可依需求調整）
-    ratio1 = 0.7
+    ratio1 = 0.6
     img_width1 = 177 * ratio1  # 圖片寬度
     img_height1 = 52 * ratio1  # 圖片高度
     angle1 = random.uniform(-3,3)  # 旋轉角度（度）
-    center_x1 = 180+random.uniform(-5,5)  # 圖片放置中心 x 座標
-    center_y1 = 100+random.uniform(-5,5)  # 圖片放置中心 y 座標
+    center_x1 = 200+random.uniform(-5,5)  # 圖片放置中心 x 座標
+    center_y1 = 60+random.uniform(-5,5)  # 圖片放置中心 y 座標
 
     c.saveState()
     c.translate(center_x1, center_y1)
@@ -101,12 +101,12 @@ def overlay_images_to_pdf(original_pdf_path,output_pdf_path):
     c.restoreState()
 
     # 第二張圖片的設定（可依需求調整）
-    ratio2 = 0.75
+    ratio2 = 0.55
     img_width2 = 277 * ratio2
     img_height2 = 181 * ratio2
     angle2 = random.uniform(-3,3)  # 旋轉角度（度）
-    center_x2 = 400+random.uniform(-5,5)  # 圖片放置中心 x 座標
-    center_y2 = 110+random.uniform(-5,5)  # 圖片放置中心 y 座標
+    center_x2 = 457+random.uniform(-5,5)  # 圖片放置中心 x 座標
+    center_y2 = 80+random.uniform(-5,5)  # 圖片放置中心 y 座標
 
     c.saveState()
     c.translate(center_x2, center_y2)
