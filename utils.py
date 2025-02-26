@@ -184,4 +184,6 @@ def process_sorted_folder(base_folder: str, folder_name: str, category: str) -> 
             if os.path.splitext(f)[1].lower() in [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff"]:
                 files.append(os.path.join(folder_path, f))
         imgs = sorted(files, key=lambda x: int(re.search(r"\d+", os.path.basename(x)).group()))
+        if len(imgs) % 2 == 1:
+            imgs.append(generate_dummy_image(f"blank_{category}.jpg"))
     return [(img, category) for img in imgs]
