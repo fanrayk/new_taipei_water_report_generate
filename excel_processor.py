@@ -1,4 +1,3 @@
-# excel_processor.py
 import os
 import datetime
 import pandas as pd
@@ -6,18 +5,22 @@ import tkinter as tk
 from tkinter import filedialog
 from utils import transform_measurement_method
 
-def select_folder_and_excel():
+
+def select_folder_and_excel() -> str:
     """
     利用 tkinter 選取包含 Excel 檔案的資料夾，
     並確認該資料夾內僅有一個 Excel 檔案。
     """
     root = tk.Tk()
     root.withdraw()
-    folder_path = filedialog.askdirectory(title="選擇包含Excel檔案的資料夾")
+    folder_path = filedialog.askdirectory(title="選擇包含 Excel 檔案的資料夾")
     if not folder_path:
         print("未選擇資料夾，程式結束。")
         exit()
-    excel_files = [f for f in os.listdir(folder_path) if f.lower().endswith((".xlsx", ".xls"))]
+    excel_files = [
+        f for f in os.listdir(folder_path)
+        if f.lower().endswith((".xlsx", ".xls"))
+    ]
     if len(excel_files) != 1:
         print("資料夾內必須且僅有一個 Excel 檔案，程式結束。")
         exit()
@@ -25,7 +28,8 @@ def select_folder_and_excel():
     print("選取的 Excel 檔案：", excel_file_path)
     return excel_file_path
 
-def process_excel_pandas(excel_file_path):
+
+def process_excel_pandas(excel_file_path: str) -> pd.DataFrame:
     """
     利用 pandas 讀取 Excel 首個工作表前 2 行資料，
     並進行欄位重新命名與資料前置處理。
@@ -46,7 +50,6 @@ def process_excel_pandas(excel_file_path):
         "經緯儀/全站儀廠牌型號": "total_station_brand_model",
         "潛盾施工廠牌型號": "shield_machine_brand_model",
         "其它廠牌型號": "other_equipment_brand_model",
-        # "施測點數": "survey_point_count",
         "管線點位": "pipeline_point_count",
         "孔蓋點位": "manhole_point_count",
         "設施物點位": "facility_point_count",
@@ -62,21 +65,24 @@ def process_excel_pandas(excel_file_path):
         "區處": "district",
     }
     df_renamed = df.rename(columns=column_mapping)
-    df_renamed["measurement_date"] = pd.to_datetime(df_renamed["measurement_date"], errors="coerce")
+    df_renamed["measurement_date"] = pd.to_datetime(
+        df_renamed["measurement_date"], errors="coerce"
+    )
     df_renamed["measurement_date"] = df_renamed["measurement_date"].apply(
         lambda x: {"year": x.year, "month": x.month, "day": x.day} if pd.notnull(x) else None
     )
     current_date = datetime.datetime.now()
-    df_renamed["current_year"]= current_date.year
-    df_renamed["current_month"]= current_date.month
-    df_renamed["current_day"]= current_date.day
+    df_renamed["current_year"] = current_date.year
+    df_renamed["current_month"] = current_date.month
+    df_renamed["current_day"] = current_date.day
 
     df_renamed["measurement_method"] = df_renamed["measurement_method"].apply(transform_measurement_method)
     df_renamed["survey_equipment"] = df_renamed["survey_equipment"].apply(transform_measurement_method)
     df_renamed = df_renamed.fillna("empty")
     return df_renamed
 
-def process_excel_openpyxl(excel_file_path, survey_point_count):
+
+def process_excel_openpyxl(excel_file_path: str, survey_point_count: str):
     """
     使用 openpyxl 讀取 Excel 指定範圍資料，
     並根據 B 欄格式分離為 simulated_data 與 reserved_data。
@@ -124,7 +130,8 @@ def process_excel_openpyxl(excel_file_path, survey_point_count):
             print(item)
     return simulated_data, reserved_data
 
-def create_output_folder(case_number):
+
+def create_output_folder(case_number: str) -> str:
     """根據案號建立輸出資料夾，並回傳路徑"""
     output_folder = os.path.join("output", str(case_number))
     if not os.path.exists(output_folder):

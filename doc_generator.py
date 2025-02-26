@@ -3,9 +3,14 @@ from docxtpl import DocxTemplate
 from docx2pdf import convert
 from config import TEMPLATE_MAIN
 
-def generate_records_doc(record, output_folder):
+
+def generate_records_doc(record: dict, output_folder: str) -> str:
     """
     使用模板產生 Word 文件，並轉換為 PDF。
+    
+    :param record: 填入模板的資料字典
+    :param output_folder: 輸出資料夾路徑
+    :return: 產生的 PDF 檔案路徑
     """
     doc = DocxTemplate(TEMPLATE_MAIN)
     doc.render(record)
