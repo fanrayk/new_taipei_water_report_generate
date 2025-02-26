@@ -232,7 +232,7 @@ def main():
 
     overlay_images_to_pdf(
         os.path.join(output_folder, "temp_自主查核表首頁.pdf"),
-        os.path.join(output_folder, f"{context_number}_自主查核表首頁.pdf"),
+        os.path.join(output_folder, f"temp_{context_number}_自主查核表首頁.pdf"),
         # os.path.join(output_folder, f"temp_{context_number}_自主查核表首頁.pdf"),
     )
 
