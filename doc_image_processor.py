@@ -147,7 +147,7 @@ def process_documents(main_folder: str, template_path: str, output_folder: str, 
         insert_images_in_template(template_path, group, word_path)
         convert_word_to_pdf(word_path, pdf_path)
 
-    merged_pdf_path = os.path.join(output_folder, f"temp_{case_number}_平面圖.pdf")
+    merged_pdf_path = os.path.join(output_folder, f"{case_number}_竣工平面圖.pdf")
     merge_pdfs(output_folder, merged_pdf_path)
 
 

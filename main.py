@@ -70,7 +70,7 @@ def main():
     merge_pdfs_from_list(
         [
             os.path.join(output_folder, f"temp_{context_number}_自主查核表首頁.pdf"),
-            os.path.join(output_folder, f"temp_{context_number}_平面圖.pdf"),
+            os.path.join(output_folder, f"{context_number}_竣工平面圖.pdf"),
             os.path.join(output_folder, f"temp_{context_number}_其他照片.pdf"),
         ],
         os.path.join(output_folder, f"{context_number}_自主查核表.pdf")
